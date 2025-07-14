@@ -16,21 +16,24 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await axios.post('/api/auth/register', formData)
-      alert('Registered successfully!')
+      const res = await axios.post('http://localhost:5000/api/auth/register', formData)
+      alert('✅ Registered successfully!')
     } catch (err) {
-      alert('Error: ' + err.response.data.message)
+      alert('❌ Error: ' + (err.response?.data?.message || 'Something went wrong.'))
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input name="name" placeholder="Name" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input name="password" placeholder="Password" type="password" onChange={handleChange} />
-      <input name="skills" placeholder="Skills (comma-separated)" onChange={handleChange} />
-      <button type="submit">Register</button>
-    </form>
+    <div style={{ padding: '2rem' }}>
+      <h2>Register</h2>
+      <form onSubmit={handleSubmit}>
+        <input name="name" placeholder="Name" onChange={handleChange} required /><br /><br />
+        <input name="email" placeholder="Email" type="email" onChange={handleChange} required /><br /><br />
+        <input name="password" placeholder="Password" type="password" onChange={handleChange} required /><br /><br />
+        <input name="skills" placeholder="Skills (comma-separated)" onChange={handleChange} /><br /><br />
+        <button type="submit">Register</button>
+      </form>
+    </div>
   )
 }
 
