@@ -8,20 +8,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-
-    if (!storedUser || !token) {
+    if (!storedUser) {
       navigate("/login");
     } else {
       setUser(JSON.parse(storedUser));
     }
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   const handleAddSkill = async () => {
     if (!newSkill.trim()) return;
@@ -40,7 +32,7 @@ const Dashboard = () => {
     const data = await res.json();
     if (res.ok) {
       alert("✅ Skill added!");
-      setUser(data.user); // update user state with new skills
+      setUser(data.user);
       localStorage.setItem("user", JSON.stringify(data.user));
       setNewSkill("");
     } else {
@@ -48,26 +40,78 @@ const Dashboard = () => {
     }
   };
 
-  if (!user) return <p>Loading...</p>;
+  const handleRemoveSkill = async (skillToRemove) => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://localhost:5000/api/auth/remove-skill", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ skill: skillToRemove }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert(`🗑️ Removed skill: ${skillToRemove}`);
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    } else {
+      alert("❌ Failed to remove skill");
+    }
+  };
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>Dashboard</h2>
-      <button onClick={handleLogout} style={{ marginBottom: "20px" }}>
-        Logout
-      </button>
-      <p><strong>Name:</strong> {user.name}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>Skills:</strong> {user.skills?.join(", ") || "None listed"}</p>
+      {!user ? (
+        <p>Loading...</p>
+      ) : (
+        <div>
+          <p>
+            <strong>Name:</strong> {user.name}
+          </p>
+          <p>
+            <strong>Email:</strong> {user.email}
+          </p>
+          <p>
+            <strong>Skills:</strong>{" "}
+            {user.skills?.length ? (
+              user.skills.map((skill) => (
+                <span
+                  key={skill}
+                  onClick={() => handleRemoveSkill(skill)}
+                  style={{
+                    cursor: "pointer",
+                    marginRight: "8px",
+                    padding: "4px 8px",
+                    backgroundColor: "#eee",
+                    borderRadius: "4px",
+                    userSelect: "none",
+                  }}
+                  title="Click to remove"
+                >
+                  {skill} &times;
+                </span>
+              ))
+            ) : (
+              "None listed"
+            )}
+          </p>
 
-      <h3>Add a New Skill</h3>
-      <input
-        type="text"
-        placeholder="Enter new skill"
-        value={newSkill}
-        onChange={(e) => setNewSkill(e.target.value)}
-      />
-      <button onClick={handleAddSkill}>Add Skill</button>
+          <h3>Add a New Skill</h3>
+          <input
+            type="text"
+            placeholder="Enter new skill"
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+          />
+          <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
+            Add Skill
+          </button>
+        </div>
+      )}
     </div>
   );
 };
