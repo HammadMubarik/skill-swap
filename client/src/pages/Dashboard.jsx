@@ -8,12 +8,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+    const token = localStorage.getItem("token");
+
+    if (!storedUser || !token) {
       navigate("/login");
     } else {
       setUser(JSON.parse(storedUser));
     }
   }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   const handleAddSkill = async () => {
     if (!newSkill.trim()) return;
@@ -40,28 +48,26 @@ const Dashboard = () => {
     }
   };
 
+  if (!user) return <p>Loading...</p>;
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Dashboard</h2>
-      {!user ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <p><strong>Name:</strong> {user.name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-          <p><strong>Skills:</strong> {user.skillsOffered?.join(", ") || "None listed"}</p>
+      <button onClick={handleLogout} style={{ marginBottom: "20px" }}>
+        Logout
+      </button>
+      <p><strong>Name:</strong> {user.name}</p>
+      <p><strong>Email:</strong> {user.email}</p>
+      <p><strong>Skills:</strong> {user.skills?.join(", ") || "None listed"}</p>
 
-
-          <h3>Add a New Skill</h3>
-          <input
-            type="text"
-            placeholder="Enter new skill"
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-          />
-          <button onClick={handleAddSkill}>Add Skill</button>
-        </div>
-      )}
+      <h3>Add a New Skill</h3>
+      <input
+        type="text"
+        placeholder="Enter new skill"
+        value={newSkill}
+        onChange={(e) => setNewSkill(e.target.value)}
+      />
+      <button onClick={handleAddSkill}>Add Skill</button>
     </div>
   );
 };
