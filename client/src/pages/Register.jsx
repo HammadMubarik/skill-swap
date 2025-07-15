@@ -1,39 +1,50 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Register = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     skills: '',
-  })
+  });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData)
+      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
 
-      // Save token and user info in localStorage
-      localStorage.setItem('token', res.data.token)
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
 
-      alert('✅ Registered successfully!')
-      navigate('/dashboard')
+      setLoading(false);
+
+      alert('✅ Registered successfully! Redirecting to dashboard...');
+      navigate('/dashboard');
     } catch (err) {
-      alert('❌ Error: ' + (err.response?.data?.message || 'Something went wrong.'))
+      setLoading(false);
+      setError(err.response?.data?.message || 'Something went wrong.');
     }
-  }
+  };
 
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Register</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
       <form onSubmit={handleSubmit}>
         <input
           name="name"
@@ -43,24 +54,27 @@ const Register = () => {
           required
         />
         <br /><br />
+
         <input
           name="email"
-          type="email"
           placeholder="Email"
+          type="email"
           value={formData.email}
           onChange={handleChange}
           required
         />
         <br /><br />
+
         <input
           name="password"
-          type="password"
           placeholder="Password"
+          type="password"
           value={formData.password}
           onChange={handleChange}
           required
         />
         <br /><br />
+
         <input
           name="skills"
           placeholder="Skills (comma-separated)"
@@ -68,10 +82,13 @@ const Register = () => {
           onChange={handleChange}
         />
         <br /><br />
-        <button type="submit">Register</button>
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
+        </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;

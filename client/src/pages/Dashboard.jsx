@@ -62,58 +62,59 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>Dashboard</h2>
-      {!user ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <p>
-            <strong>Name:</strong> {user.name}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-          <p>
-            <strong>Skills:</strong>{" "}
-            {user.skills?.length ? (
-              user.skills.map((skill) => (
-                <span
-                  key={skill}
-                  onClick={() => handleRemoveSkill(skill)}
-                  style={{
-                    cursor: "pointer",
-                    marginRight: "8px",
-                    padding: "4px 8px",
-                    backgroundColor: "#eee",
-                    borderRadius: "4px",
-                    userSelect: "none",
-                  }}
-                  title="Click to remove"
-                >
-                  {skill} &times;
-                </span>
-              ))
-            ) : (
-              "None listed"
-            )}
-          </p>
+return (
+  <div style={{ padding: "20px" }}>
+    <h2>Dashboard</h2>
+    {!user ? (
+      <p>Loading...</p>
+    ) : (
+      <div>
+        <p>
+          <strong>Name:</strong> {user.name}
+        </p>
+        <p>
+          <strong>Email:</strong> {user.email}
+        </p>
+        <p>
+          <strong>Skills:</strong>{" "}
+          {user.skillsOffered?.length ? (
+            user.skillsOffered.map((skill) => (
+              <span
+                key={skill}
+                onClick={() => handleRemoveSkill(skill)}
+                style={{
+                  cursor: "pointer",
+                  marginRight: "8px",
+                  padding: "4px 8px",
+                  backgroundColor: "#eee",
+                  borderRadius: "4px",
+                  userSelect: "none",
+                }}
+                title="Click to remove"
+              >
+                {skill.trim() || "Unnamed Skill"} &times;
+              </span>
+            ))
+          ) : (
+            "None listed"
+          )}
+        </p>
 
-          <h3>Add a New Skill</h3>
-          <input
-            type="text"
-            placeholder="Enter new skill"
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-          />
-          <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
-            Add Skill
-          </button>
-        </div>
-      )}
-    </div>
-  );
+        <h3>Add a New Skill</h3>
+        <input
+          type="text"
+          placeholder="Enter new skill"
+          value={newSkill}
+          onChange={(e) => setNewSkill(e.target.value)}
+        />
+        <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
+          Add Skill
+        </button>
+      </div>
+    )}
+  </div>
+);
+
 };
 
 export default Dashboard;

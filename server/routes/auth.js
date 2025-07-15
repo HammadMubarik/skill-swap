@@ -13,7 +13,7 @@ router.post('/register', async (req, res) => {
     console.log("📥 Received registration request");
     console.log("📦 Request body:", req.body);
 
-    const { name, email, password } = req.body;
+    const { name, email, password, skills } = req.body;
 
     // Basic validation
     if (!name || !email || !password) {
@@ -32,11 +32,17 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Convert comma-separated skills string to array, trim spaces
+    const skillsOfferedArray = skills
+      ? skills.split(',').map(skill => skill.trim()).filter(Boolean)
+      : [];
+
     // Create and save new user
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
+      skillsOffered: skillsOfferedArray,
     });
 
     await newUser.save();
@@ -45,13 +51,14 @@ router.post('/register', async (req, res) => {
     // Create JWT token
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    // Respond
+    // Respond with token and user info (excluding password)
     res.status(201).json({
       token,
       user: {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        skillsOffered: newUser.skillsOffered,
       },
     });
   } catch (err) {
@@ -76,7 +83,15 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({ token, user: { id: user._id, name: user.name, email } });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        skillsOffered: user.skillsOffered,
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -92,37 +107,42 @@ router.post('/add-skill', authMiddleware, async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!user.skillsOffered.includes(skill)) {
+    if (skill && !user.skillsOffered.includes(skill)) {
       user.skillsOffered.push(skill);
       await user.save();
     }
 
-    res.json({ user });
-  } catch (err) {
-    console.error("❌ Error adding skill:", err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Remove skill route
-router.post('/remove-skill', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { skill } = req.body;
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Remove skill if it exists
-    user.skills = user.skills.filter(s => s.toLowerCase() !== skill.toLowerCase());
-    await user.save();
-
-    res.json({ user });
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        skillsOffered: user.skillsOffered,
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+// Remove skill route
+router.post("/remove-skill", authMiddleware, async (req, res) => {
+  const { skill } = req.body;
 
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.skillsOffered = user.skillsOffered.filter(
+      (s) => s.toLowerCase() !== skill.toLowerCase()
+    );
+
+    await user.save();
+    res.json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = router;
