@@ -19,7 +19,7 @@ const Dashboard = () => {
       setUser(parsedUser);
 
       const token = localStorage.getItem("token");
-fetch("http://localhost:5000/api/auth/match", {
+      fetch("http://localhost:5000/api/auth/match", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -80,6 +80,11 @@ fetch("http://localhost:5000/api/auth/match", {
     } else {
       alert("❌ Failed to remove skill");
     }
+  };
+
+  const startChatWith = (userToChatWith) => {
+    localStorage.setItem("chatUser", JSON.stringify(userToChatWith));
+    navigate("/chat");
   };
 
   return (
@@ -147,7 +152,8 @@ fetch("http://localhost:5000/api/auth/match", {
                 {matches.usersWantingMySkills.map((u) => (
                   <li key={u._id}>
                     {u.name} ({u.email}) – Wants:{" "}
-                    {u.skillsWanted?.join(", ") || "None"}
+                    {u.skillsWanted?.join(", ") || "None"}{" "}
+                    <button onClick={() => startChatWith(u)}>💬 Text</button>
                   </li>
                 ))}
               </ul>
@@ -163,7 +169,8 @@ fetch("http://localhost:5000/api/auth/match", {
                 {matches.usersOfferingWhatINeed.map((u) => (
                   <li key={u._id}>
                     {u.name} ({u.email}) – Offers:{" "}
-                    {u.skillsOffered?.join(", ") || "None"}
+                    {u.skillsOffered?.join(", ") || "None"}{" "}
+                    <button onClick={() => startChatWith(u)}>💬 Text</button>
                   </li>
                 ))}
               </ul>

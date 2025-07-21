@@ -15,7 +15,7 @@ module.exports = function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // this should give access to `req.user.id`
+    req.user = decoded; 
     next();
   } catch (err) {
     console.error("❌ Invalid token");
