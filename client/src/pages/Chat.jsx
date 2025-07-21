@@ -6,6 +6,7 @@ const Chat = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [senderName, setSenderName] = useState("User");
+  const [chatPartner, setChatPartner] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -14,8 +15,12 @@ const Chat = () => {
       setSenderName(parsedUser.name || "User");
     }
 
-    // Initialize socket 
-   socket.current = io("http://localhost:5000");
+    const storedChatUser = localStorage.getItem("chatUser");
+    if (storedChatUser) {
+      setChatPartner(JSON.parse(storedChatUser));
+    }
+
+    socket.current = io("http://localhost:5000");
 
     socket.current.on("receive_message", (data) => {
       setMessages((prev) => [...prev, data]);
@@ -39,7 +44,7 @@ const Chat = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>💬 Real-Time Chat</h2>
+      <h2>💬 Chat with {chatPartner ? chatPartner.name : "..."}</h2>
 
       <div
         style={{
