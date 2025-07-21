@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -35,6 +38,7 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setSuccess("✅ Login successful!");
+      navigate("/dashboard");
     } catch (err) {
       console.error(err);
       setError("❌ Something went wrong.");
