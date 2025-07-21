@@ -147,4 +147,23 @@ router.post("/remove-skill", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Match route — returns users that match
+router.get('/match', authMiddleware, async (req, res) => {
+  const currentUser = await User.findById(req.user.id);
+  if (!currentUser) return res.status(404).json({ message: "User not found" });
+
+  const usersWantingMySkills = await User.find({
+    _id: { $ne: currentUser._id },
+    skillsWanted: { $in: currentUser.skillsOffered },
+  });
+
+  const usersOfferingWhatINeed = await User.find({
+    _id: { $ne: currentUser._id },
+    skillsOffered: { $in: currentUser.skillsWanted },
+  });
+
+  res.json({ usersWantingMySkills, usersOfferingWhatINeed });
+});
+
 module.exports = router;

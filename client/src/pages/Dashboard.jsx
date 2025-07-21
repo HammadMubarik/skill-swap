@@ -19,7 +19,7 @@ const Dashboard = () => {
       setUser(parsedUser);
 
       const token = localStorage.getItem("token");
-      fetch("http://localhost:5000/api/match", {
+fetch("http://localhost:5000/api/auth/match", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
