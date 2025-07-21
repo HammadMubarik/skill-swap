@@ -13,45 +13,43 @@ router.post('/register', async (req, res) => {
     console.log("📥 Received registration request");
     console.log("📦 Request body:", req.body);
 
-    const { name, email, password, skills } = req.body;
+    const { name, email, password, skillsOffered, skillsWanted } = req.body;
 
-    // Basic validation
     if (!name || !email || !password) {
       console.log("❌ Missing fields");
       return res.status(400).json({ message: 'Please fill in all fields' });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log("⚠️ User already exists");
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Convert comma-separated skills string to array, trim spaces
-    const skillsOfferedArray = skills
-      ? skills.split(',').map(skill => skill.trim()).filter(Boolean)
-      : [];
+    const offered = Array.isArray(skillsOffered)
+      ? skillsOffered
+      : (skillsOffered || "").split(',').map(s => s.trim()).filter(Boolean);
 
-    // Create and save new user
+    const wanted = Array.isArray(skillsWanted)
+      ? skillsWanted
+      : (skillsWanted || "").split(',').map(s => s.trim()).filter(Boolean);
+
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
-      skillsOffered: skillsOfferedArray,
+      skillsOffered: offered,
+      skillsWanted: wanted
     });
 
     await newUser.save();
     console.log("✅ User registered:", newUser.email);
 
-    // Create JWT token
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1d' });
 
-    // Respond with token and user info (excluding password)
     res.status(201).json({
       token,
       user: {
@@ -59,13 +57,16 @@ router.post('/register', async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         skillsOffered: newUser.skillsOffered,
-      },
+        skillsWanted: newUser.skillsWanted
+      }
     });
   } catch (err) {
     console.error("❌ Server error:", err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -90,6 +91,7 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         skillsOffered: user.skillsOffered,
+        skillsWanted: user.skillsWanted
       }
     });
   } catch (err) {

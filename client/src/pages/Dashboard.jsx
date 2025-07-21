@@ -5,6 +5,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [newSkill, setNewSkill] = useState("");
+  const [matches, setMatches] = useState({
+    usersWantingMySkills: [],
+    usersOfferingWhatINeed: [],
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -12,8 +16,22 @@ const Dashboard = () => {
       navigate("/login");
     } else {
       const parsedUser = JSON.parse(storedUser);
-      console.log("👤 User from localStorage:", parsedUser);
       setUser(parsedUser);
+
+      const token = localStorage.getItem("token");
+      fetch("http://localhost:5000/api/match", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setMatches({
+            usersWantingMySkills: data.usersWantingMySkills || [],
+            usersOfferingWhatINeed: data.usersOfferingWhatINeed || [],
+          });
+        })
+        .catch((err) => console.error("Match fetch error:", err));
     }
   }, [navigate]);
 
@@ -64,9 +82,6 @@ const Dashboard = () => {
     }
   };
 
-  
-  const skills = user?.skillsOffered || user?.skills || [];
-
   return (
     <div style={{ padding: "20px" }}>
       <h2>Dashboard</h2>
@@ -81,9 +96,9 @@ const Dashboard = () => {
             <strong>Email:</strong> {user.email}
           </p>
           <p>
-            <strong>Skills:</strong>{" "}
-            {skills.length ? (
-              skills.map((skill, index) => (
+            <strong>Skills Offered:</strong>{" "}
+            {user.skillsOffered?.length ? (
+              user.skillsOffered.map((skill, index) => (
                 <span
                   key={index}
                   onClick={() => handleRemoveSkill(skill)}
@@ -100,7 +115,7 @@ const Dashboard = () => {
                   }}
                   title="Click to remove"
                 >
-                  {skill?.trim() || "Unnamed Skill"} &times;
+                  {skill.trim() || "Unnamed Skill"} &times;
                 </span>
               ))
             ) : (
@@ -118,6 +133,42 @@ const Dashboard = () => {
           <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
             Add Skill
           </button>
+
+          <hr style={{ margin: "20px 0" }} />
+
+          <h3>🔁 Skill Matches</h3>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <strong>🎯 People who want your skills:</strong>
+            {matches.usersWantingMySkills.length === 0 ? (
+              <p>None found</p>
+            ) : (
+              <ul>
+                {matches.usersWantingMySkills.map((u) => (
+                  <li key={u._id}>
+                    {u.name} ({u.email}) – Wants:{" "}
+                    {u.skillsWanted?.join(", ") || "None"}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <strong>🤝 People who offer what you want:</strong>
+            {matches.usersOfferingWhatINeed.length === 0 ? (
+              <p>None found</p>
+            ) : (
+              <ul>
+                {matches.usersOfferingWhatINeed.map((u) => (
+                  <li key={u._id}>
+                    {u.name} ({u.email}) – Offers:{" "}
+                    {u.skillsOffered?.join(", ") || "None"}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </div>

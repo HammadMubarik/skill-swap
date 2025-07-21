@@ -3,89 +3,80 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Register = () => {
-  const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    skills: '',
+    skillsOffered: '',
+    skillsWanted: ''
   });
 
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        skillsOffered: formData.skillsOffered
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter((s) => s),
+        skillsWanted: formData.skillsWanted
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter((s) => s)
+      };
 
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      const res = await axios.post('http://localhost:5000/api/auth/register', payload);
 
-      setLoading(false);
-
-      alert('✅ Registered successfully! Redirecting to dashboard...');
-      navigate('/dashboard');
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        alert('✅ Registered successfully!');
+        window.location.href = '/dashboard';
+      }
     } catch (err) {
-      setLoading(false);
-      setError(err.response?.data?.message || 'Something went wrong.');
+      alert('❌ Error: ' + (err.response?.data?.message || 'Something went wrong.'));
     }
   };
 
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Register</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
       <form onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
+        <input 
+        name="name"
+        placeholder="Name" 
+        onChange={handleChange} 
+        required />
         <br /><br />
-
-        <input
-          name="email"
-          placeholder="Email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <input name="email" 
+        placeholder="Email" 
+        type="email" 
+        onChange={handleChange} 
+        required />
         <br /><br />
-
+        <input name="password"
+         placeholder="Password" 
+         type="password" 
+         onChange={handleChange} 
+         required /><br /><br />
         <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          value={formData.password}
+          name="skillsOffered"
+          placeholder="Skills you offer (comma-separated)"
           onChange={handleChange}
-          required
-        />
-        <br /><br />
-
+        /><br /><br />
         <input
-          name="skills"
-          placeholder="Skills (comma-separated)"
-          value={formData.skills}
+          name="skillsWanted"
+          placeholder="Skills you want (comma-separated)"
           onChange={handleChange}
-        />
-        <br /><br />
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Registering...' : 'Register'}
-        </button>
+        /><br /><br />
+        <button type="submit">Register</button>
       </form>
     </div>
   );
