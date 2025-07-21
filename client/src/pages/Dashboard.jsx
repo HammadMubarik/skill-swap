@@ -11,7 +11,9 @@ const Dashboard = () => {
     if (!storedUser) {
       navigate("/login");
     } else {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      console.log("👤 User from localStorage:", parsedUser);
+      setUser(parsedUser);
     }
   }, [navigate]);
 
@@ -62,59 +64,64 @@ const Dashboard = () => {
     }
   };
 
-return (
-  <div style={{ padding: "20px" }}>
-    <h2>Dashboard</h2>
-    {!user ? (
-      <p>Loading...</p>
-    ) : (
-      <div>
-        <p>
-          <strong>Name:</strong> {user.name}
-        </p>
-        <p>
-          <strong>Email:</strong> {user.email}
-        </p>
-        <p>
-          <strong>Skills:</strong>{" "}
-          {user.skillsOffered?.length ? (
-            user.skillsOffered.map((skill) => (
-              <span
-                key={skill}
-                onClick={() => handleRemoveSkill(skill)}
-                style={{
-                  cursor: "pointer",
-                  marginRight: "8px",
-                  padding: "4px 8px",
-                  backgroundColor: "#eee",
-                  borderRadius: "4px",
-                  userSelect: "none",
-                }}
-                title="Click to remove"
-              >
-                {skill.trim() || "Unnamed Skill"} &times;
-              </span>
-            ))
-          ) : (
-            "None listed"
-          )}
-        </p>
+  
+  const skills = user?.skillsOffered || user?.skills || [];
 
-        <h3>Add a New Skill</h3>
-        <input
-          type="text"
-          placeholder="Enter new skill"
-          value={newSkill}
-          onChange={(e) => setNewSkill(e.target.value)}
-        />
-        <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
-          Add Skill
-        </button>
-      </div>
-    )}
-  </div>
-);
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Dashboard</h2>
+      {!user ? (
+        <p>Loading...</p>
+      ) : (
+        <div>
+          <p>
+            <strong>Name:</strong> {user.name}
+          </p>
+          <p>
+            <strong>Email:</strong> {user.email}
+          </p>
+          <p>
+            <strong>Skills:</strong>{" "}
+            {skills.length ? (
+              skills.map((skill, index) => (
+                <span
+                  key={index}
+                  onClick={() => handleRemoveSkill(skill)}
+                  style={{
+                    cursor: "pointer",
+                    marginRight: "8px",
+                    padding: "4px 8px",
+                    backgroundColor: "#eee",
+                    borderRadius: "4px",
+                    userSelect: "none",
+                    color: "#333",
+                    border: "1px solid #ccc",
+                    display: "inline-block",
+                  }}
+                  title="Click to remove"
+                >
+                  {skill?.trim() || "Unnamed Skill"} &times;
+                </span>
+              ))
+            ) : (
+              "None listed"
+            )}
+          </p>
 
+          <h3>Add a New Skill</h3>
+          <input
+            type="text"
+            placeholder="Enter new skill"
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+          />
+          <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
+            Add Skill
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Dashboard;
