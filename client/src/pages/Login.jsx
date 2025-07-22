@@ -37,11 +37,11 @@ import { useNavigate } from "react-router-dom";
       // Save token and user to localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      setSuccess("✅ Login successful!");
+      setSuccess("Login successful!");
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      setError("❌ Something went wrong.");
+      setError("Something went wrong.");
     }
   };
 

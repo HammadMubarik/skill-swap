@@ -48,7 +48,7 @@ const Chat = () => {
   return (
     <div style={{ padding: "20px" }}>
       <button onClick={() => navigate("/dashboard")} style={{ marginBottom: "15px" }}>
-        ⬅️ Back to Dashboard
+       Back to Dashboard
       </button>
       <h2>💬 Chat with {chatPartner ? chatPartner.name : "..."}</h2>
 
@@ -81,7 +81,7 @@ const Chat = () => {
         Send
       </button>
         <div style={{ marginTop: "20px" }}>
-        <button onClick={() => navigate("/dashboard")}>⬅️ Back to Dashboard</button>
+        <button onClick={() => navigate("/dashboard")}>⬅Back to Dashboard</button>
       </div>
     </div>
   );

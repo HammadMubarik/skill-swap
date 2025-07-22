@@ -41,7 +41,7 @@ const Register = () => {
         window.location.href = '/dashboard';
       }
     } catch (err) {
-      alert('❌ Error: ' + (err.response?.data?.message || 'Something went wrong.'));
+      alert('Error: ' + (err.response?.data?.message || 'Something went wrong.'));
     }
   };
 

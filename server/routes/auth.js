@@ -10,13 +10,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 // Register route
 router.post('/register', async (req, res) => {
   try {
-    console.log("📥 Received registration request");
-    console.log("📦 Request body:", req.body);
+    console.log("Received registration request");
+    console.log("Request body:", req.body);
 
     const { name, email, password, skillsOffered, skillsWanted } = req.body;
 
     if (!name || !email || !password) {
-      console.log("❌ Missing fields");
+      console.log("Missing fields");
       return res.status(400).json({ message: 'Please fill in all fields' });
     }
 
@@ -61,7 +61,7 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("❌ Server error:", err);
+    console.error("Server error:", err);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -11,7 +11,7 @@ const Home = () => {
       backgroundColor: "#f7f7f7",
       textAlign: "center"
     }}>
-      <h1>👋 Welcome to Skill Swap</h1>
+      <h1>Welcome to Skill Swap</h1>
       <p>Connect, trade, and grow your skills!</p>
 
       <div style={{ marginTop: "20px" }}>
