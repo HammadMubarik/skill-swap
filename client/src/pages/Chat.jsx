@@ -1,13 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
-import { useNavigate } from "react-router-dom"; 
-
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useChatSocket from "../hooks/useChatSocket";
 
 const Chat = () => {
   const navigate = useNavigate();
-  const socket = useRef(null);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
   const [senderName, setSenderName] = useState("User");
   const [chatPartner, setChatPartner] = useState(null);
 
@@ -22,46 +19,30 @@ const Chat = () => {
     if (storedChatUser) {
       setChatPartner(JSON.parse(storedChatUser));
     }
-
-    socket.current = io("http://localhost:5000");
-
-    socket.current.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
-
-    return () => {
-      socket.current.disconnect();
-    };
   }, []);
 
-  const sendMessage = () => {
-    if (message.trim() === "") return;
-    const payload = {
-      text: message,
-      sender: senderName,
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    socket.current.emit("send_message", payload);
+  const { messages, sendMessage } = useChatSocket(senderName);
+
+  const handleSend = () => {
+    sendMessage(message);
     setMessage("");
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <button onClick={() => navigate("/dashboard")} style={{ marginBottom: "15px" }}>
-       Back to Dashboard
+        Back to Dashboard
       </button>
-      <h2>💬 Chat with {chatPartner ? chatPartner.name : "..."}</h2>
+      <h2>Chat with {chatPartner ? chatPartner.name : "..."}</h2>
 
-      <div
-        style={{
-          border: "1px solid #ccc",
-          padding: "10px",
-          height: "300px",
-          overflowY: "auto",
-          marginBottom: "10px",
-          backgroundColor: "#ad6262ff",
-        }}
-      >
+      <div style={{
+        border: "1px solid #ccc",
+        padding: "10px",
+        height: "300px",
+        overflowY: "auto",
+        marginBottom: "10px",
+        backgroundColor: "#f9f9f9"
+      }}>
         {messages.map((msg, index) => (
           <div key={index}>
             <strong>{msg.sender}</strong>: {msg.text}{" "}
@@ -77,12 +58,9 @@ const Chat = () => {
         onChange={(e) => setMessage(e.target.value)}
         style={{ width: "70%" }}
       />
-      <button onClick={sendMessage} style={{ marginLeft: "10px" }}>
+      <button onClick={handleSend} style={{ marginLeft: "10px" }}>
         Send
       </button>
-        <div style={{ marginTop: "20px" }}>
-        <button onClick={() => navigate("/dashboard")}>⬅Back to Dashboard</button>
-      </div>
     </div>
   );
 };
