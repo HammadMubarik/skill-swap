@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchMatchData,
+  addSkill,
+  removeSkill,
+} from "../api/auth"; 
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -19,12 +24,7 @@ const Dashboard = () => {
       setUser(parsedUser);
 
       const token = localStorage.getItem("token");
-      fetch("http://localhost:5000/api/auth/match", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => res.json())
+      fetchMatchData(token)
         .then((data) => {
           setMatches({
             usersWantingMySkills: data.usersWantingMySkills || [],
@@ -37,20 +37,9 @@ const Dashboard = () => {
 
   const handleAddSkill = async () => {
     if (!newSkill.trim()) return;
-
     const token = localStorage.getItem("token");
-
-    const res = await fetch("http://localhost:5000/api/auth/add-skill", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ skill: newSkill }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
+    const data = await addSkill(newSkill, token);
+    if (data) {
       alert("Skill added!");
       setUser(data.user);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -62,18 +51,8 @@ const Dashboard = () => {
 
   const handleRemoveSkill = async (skillToRemove) => {
     const token = localStorage.getItem("token");
-
-    const res = await fetch("http://localhost:5000/api/auth/remove-skill", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ skill: skillToRemove }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
+    const data = await removeSkill(skillToRemove, token);
+    if (data) {
       alert(`Removed skill: ${skillToRemove}`);
       setUser(data.user);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -87,114 +66,113 @@ const Dashboard = () => {
     navigate("/chat");
   };
 
-return (
-  <div style={{ padding: "20px" }}>
-    <h2>Dashboard</h2>
-    {!user ? (
-      <p>Loading...</p>
-    ) : (
-      <div>
-        <p><strong>Name:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p>
-          <strong>Skills Offered:</strong>{" "}
-          {user.skillsOffered?.length ? (
-            user.skillsOffered.map((skill, index) => (
-              <span
-                key={index}
-                onClick={() => handleRemoveSkill(skill)}
-                style={{
-                  cursor: "pointer",
-                  marginRight: "8px",
-                  padding: "4px 8px",
-                  backgroundColor: "#eee",
-                  borderRadius: "4px",
-                  userSelect: "none",
-                  color: "#333",
-                  border: "1px solid #ccc",
-                  display: "inline-block",
-                }}
-                title="Click to remove"
-              >
-                {skill.trim() || "Unnamed Skill"} &times;
-              </span>
-            ))
-          ) : (
-            "None listed"
-          )}
-        </p>
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Dashboard</h2>
+      {!user ? (
+        <p>Loading...</p>
+      ) : (
+        <div>
+          <p><strong>Name:</strong> {user.name}</p>
+          <p><strong>Email:</strong> {user.email}</p>
+          <p>
+            <strong>Skills Offered:</strong>{" "}
+            {user.skillsOffered?.length ? (
+              user.skillsOffered.map((skill, index) => (
+                <span
+                  key={index}
+                  onClick={() => handleRemoveSkill(skill)}
+                  style={{
+                    cursor: "pointer",
+                    marginRight: "8px",
+                    padding: "4px 8px",
+                    backgroundColor: "#eee",
+                    borderRadius: "4px",
+                    userSelect: "none",
+                    color: "#333",
+                    border: "1px solid #ccc",
+                    display: "inline-block",
+                  }}
+                  title="Click to remove"
+                >
+                  {skill.trim() || "Unnamed Skill"} &times;
+                </span>
+              ))
+            ) : (
+              "None listed"
+            )}
+          </p>
 
-        <h3>Add a New Skill</h3>
-        <input
-          type="text"
-          placeholder="Enter new skill"
-          value={newSkill}
-          onChange={(e) => setNewSkill(e.target.value)}
-        />
-        <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
-          Add Skill
-        </button>
+          <h3>Add a New Skill</h3>
+          <input
+            type="text"
+            placeholder="Enter new skill"
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+          />
+          <button onClick={handleAddSkill} style={{ marginLeft: "10px" }}>
+            Add Skill
+          </button>
 
-        <hr style={{ margin: "20px 0" }} />
+          <hr style={{ margin: "20px 0" }} />
 
-        <h3>🔁 Skill Matches</h3>
+          <h3>Skill Matches</h3>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <strong>People who want your skills:</strong>
-          {matches.usersWantingMySkills.length === 0 ? (
-            <p>None found</p>
-          ) : (
+          <div style={{ marginBottom: "1rem" }}>
+            <strong>People who want your skills:</strong>
+            {matches.usersWantingMySkills.length === 0 ? (
+              <p>None found</p>
+            ) : (
+              <ul>
+                {matches.usersWantingMySkills.map((u) => (
+                  <li key={u._id}>
+                    {u.name} ({u.email}) – Wants:{" "}
+                    {u.skillsWanted?.join(", ") || "None"}{" "}
+                    <button onClick={() => startChatWith(u)}>Text</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <strong>People who offer what you want:</strong>
+            {matches.usersOfferingWhatINeed.length === 0 ? (
+              <p>None found</p>
+            ) : (
+              <ul>
+                {matches.usersOfferingWhatINeed.map((u) => (
+                  <li key={u._id}>
+                    {u.name} ({u.email}) – Offers:{" "}
+                    {u.skillsOffered?.join(", ") || "None"}{" "}
+                    <button onClick={() => startChatWith(u)}>Text</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <strong>Mutual Skill Matches:</strong>
             <ul>
-              {matches.usersWantingMySkills.map((u) => (
-                <li key={u._id}>
-                  {u.name} ({u.email}) – Wants:{" "}
-                  {u.skillsWanted?.join(", ") || "None"}{" "}
-                  <button onClick={() => startChatWith(u)}>💬 Text</button>
-                </li>
-              ))}
+              {matches.usersWantingMySkills
+                .filter((u) =>
+                  matches.usersOfferingWhatINeed.some((other) => other._id === u._id)
+                )
+                .map((mutualUser) => (
+                  <li key={mutualUser._id}>
+                    You match with {mutualUser.name} – Wants:{" "}
+                    {mutualUser.skillsWanted?.join(", ")} | Offers:{" "}
+                    {mutualUser.skillsOffered?.join(", ")}{" "}
+                    <button onClick={() => startChatWith(mutualUser)}>Text</button>
+                  </li>
+                ))}
             </ul>
-          )}
+          </div>
         </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <strong>People who offer what you want:</strong>
-          {matches.usersOfferingWhatINeed.length === 0 ? (
-            <p>None found</p>
-          ) : (
-            <ul>
-              {matches.usersOfferingWhatINeed.map((u) => (
-                <li key={u._id}>
-                  {u.name} ({u.email}) – Offers:{" "}
-                  {u.skillsOffered?.join(", ") || "None"}{" "}
-                  <button onClick={() => startChatWith(u)}>💬 Text</button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <strong>Mutual Skill Matches:</strong>
-          <ul>
-            {matches.usersWantingMySkills
-              .filter((u) =>
-                matches.usersOfferingWhatINeed.some((other) => other._id === u._id)
-              )
-              .map((mutualUser) => (
-                <li key={mutualUser._id}>
-                  You <strong>match with</strong> {mutualUser.name} – Wants:{" "}
-                  {mutualUser.skillsWanted?.join(", ")} | Offers:{" "}
-                  {mutualUser.skillsOffered?.join(", ")}{" "}
-                  <button onClick={() => startChatWith(mutualUser)}> Text</button>
-                </li>
-              ))}
-          </ul>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
+      )}
+    </div>
+  );
 };
 
 export default Dashboard;
