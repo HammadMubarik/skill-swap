@@ -185,7 +185,7 @@ return (
                   You <strong>match with</strong> {mutualUser.name} – Wants:{" "}
                   {mutualUser.skillsWanted?.join(", ")} | Offers:{" "}
                   {mutualUser.skillsOffered?.join(", ")}{" "}
-                  <button onClick={() => startChatWith(mutualUser)}>💬 Text</button>
+                  <button onClick={() => startChatWith(mutualUser)}> Text</button>
                 </li>
               ))}
           </ul>
