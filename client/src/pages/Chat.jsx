@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { useNavigate } from "react-router-dom"; 
+
 
 const Chat = () => {
+  const navigate = useNavigate();
   const socket = useRef(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -44,6 +47,9 @@ const Chat = () => {
 
   return (
     <div style={{ padding: "20px" }}>
+      <button onClick={() => navigate("/dashboard")} style={{ marginBottom: "15px" }}>
+        ⬅️ Back to Dashboard
+      </button>
       <h2>💬 Chat with {chatPartner ? chatPartner.name : "..."}</h2>
 
       <div
@@ -53,7 +59,7 @@ const Chat = () => {
           height: "300px",
           overflowY: "auto",
           marginBottom: "10px",
-          backgroundColor: "#f9f9f9",
+          backgroundColor: "#ad6262ff",
         }}
       >
         {messages.map((msg, index) => (
@@ -74,6 +80,9 @@ const Chat = () => {
       <button onClick={sendMessage} style={{ marginLeft: "10px" }}>
         Send
       </button>
+        <div style={{ marginTop: "20px" }}>
+        <button onClick={() => navigate("/dashboard")}>⬅️ Back to Dashboard</button>
+      </div>
     </div>
   );
 };
