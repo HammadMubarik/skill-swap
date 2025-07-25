@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   skillsOffered: [{ type: String }],
   skillsWanted: [{ type: String }],
+  embedding: { type: [Number], default: [] } 
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
