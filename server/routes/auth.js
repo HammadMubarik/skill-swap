@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
+const { getEmbeddingFromOpenAI } = require('../utils/openai'); 
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
@@ -37,12 +38,16 @@ router.post('/register', async (req, res) => {
       ? skillsWanted
       : (skillsWanted || "").split(',').map(s => s.trim()).filter(Boolean);
 
+    const combined = [...offered, ...wanted].join(', ');
+    const embedding = await getEmbeddingFromOpenAI(combined); // NEW: generate embedding
+
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       skillsOffered: offered,
-      skillsWanted: wanted
+      skillsWanted: wanted,
+      embedding 
     });
 
     await newUser.save();
@@ -65,9 +70,6 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-
-
 // Login route
 router.post('/login', async (req, res) => {
   try {
