@@ -1,4 +1,4 @@
-export const fetchMatches = async (token) => {
+export const fetchMatchData = async (token) => {
   const res = await fetch("http://localhost:5000/api/auth/match", {
     headers: {
       Authorization: `Bearer ${token}`,

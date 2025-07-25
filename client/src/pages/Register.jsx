@@ -18,22 +18,9 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      skillsOffered: formData.skillsOffered
-        .split(',')
-        .map(skill => skill.trim())
-        .filter(s => s),
-      skillsWanted: formData.skillsWanted
-        .split(',')
-        .map(skill => skill.trim())
-        .filter(s => s)
-    };
 
     try {
-      const res = await registerUser(payload);
+      const res = await registerUser(formData);
       if (res.token) {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
@@ -41,7 +28,7 @@ const Register = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      alert('Error: ' + (err.response?.data?.message || 'Something went wrong.'));
+      alert('Error: ' + err.message);
     }
   };
 

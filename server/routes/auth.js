@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("⚠️ User already exists");
+      console.log("User already exists");
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -46,7 +46,7 @@ router.post('/register', async (req, res) => {
     });
 
     await newUser.save();
-    console.log("✅ User registered:", newUser.email);
+    console.log("User registered:", newUser.email);
 
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1d' });
 
