@@ -1,7 +1,9 @@
-export const fetchMatchData = async (token) => {
+export async function fetchMatchData(token) {
   const res = await fetch("http://localhost:5000/api/auth/match", {
+    method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
   });
   if (!res.ok) throw new Error("Failed to fetch matches");
