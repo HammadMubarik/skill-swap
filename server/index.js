@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -25,7 +26,7 @@ app.set("io", io);
 
 //  Handle socket connections
 io.on("connection", (socket) => {
-  console.log(`📡 User connected: ${socket.id}`);
+  console.log(`User connected: ${socket.id}`);
 
   socket.on("send_message", (data) => {
     console.log(" Message received:", data);

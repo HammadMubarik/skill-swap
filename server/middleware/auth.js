@@ -5,6 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 module.exports = function (req, res, next) {
   const authHeader = req.headers.authorization;
 
+  console.log("Incoming auth header:", authHeader);
+
   console.log("Token received:", authHeader);
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

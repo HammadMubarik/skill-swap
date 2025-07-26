@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
-const { getEmbeddingFromOpenAI } = require('../utils/openai'); 
+const { getEmbedding } = require('../utils/embeddings');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
@@ -38,8 +38,14 @@ router.post('/register', async (req, res) => {
       ? skillsWanted
       : (skillsWanted || "").split(',').map(s => s.trim()).filter(Boolean);
 
-    const combined = [...offered, ...wanted].join(', ');
-    const embedding = await getEmbeddingFromOpenAI(combined); // NEW: generate embedding
+    const allSkills = [...offered, ...wanted].map(s => s.trim().toLowerCase());
+
+    const skillEmbeddings = [];
+    for (const skill of allSkills) {
+      const embedding = await getEmbedding(skill);
+      skillEmbeddings.push({ skill, embedding });
+    }
+
 
     const newUser = new User({
       name,
@@ -47,7 +53,7 @@ router.post('/register', async (req, res) => {
       password: hashedPassword,
       skillsOffered: offered,
       skillsWanted: wanted,
-      embedding 
+      skillEmbeddings
     });
 
     await newUser.save();
@@ -150,22 +156,87 @@ router.post("/remove-skill", authMiddleware, async (req, res) => {
   }
 });
 
-// Match route — returns users that match
+// Match route — compares offered/wanted skill embeddings semantically
 router.get('/match', authMiddleware, async (req, res) => {
-  const currentUser = await User.findById(req.user.id);
-  if (!currentUser) return res.status(404).json({ message: "User not found" });
+  try {
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser || !currentUser.skillEmbeddings?.length) {
+      return res.status(404).json({ message: "User or their embeddings not found" });
+    }
+    // Testing
+    console.log("/match route hit");
+    console.log(" ncoming auth header:", req.headers.authorization);
+    console.log("User:", currentUser.email);
 
-  const usersWantingMySkills = await User.find({
-    _id: { $ne: currentUser._id },
-    skillsWanted: { $in: currentUser.skillsOffered },
-  });
+    const allUsers = await User.find({
+      _id: { $ne: currentUser._id },
+      skillEmbeddings: { $exists: true, $ne: [] },
+    });
 
-  const usersOfferingWhatINeed = await User.find({
-    _id: { $ne: currentUser._id },
-    skillsOffered: { $in: currentUser.skillsWanted },
-  });
+    const cosineSimilarity = (vecA, vecB) => {
+      const dot = vecA.reduce((sum, v, i) => sum + v * vecB[i], 0);
+      const magA = Math.sqrt(vecA.reduce((sum, v) => sum + v * v, 0));
+      const magB = Math.sqrt(vecB.reduce((sum, v) => sum + v * v, 0));
+      return dot / (magA * magB);
+    };
 
-  res.json({ usersWantingMySkills, usersOfferingWhatINeed });
+    const SIM_THRESHOLD = 0.65;
+
+    const usersWantingMySkills = [];
+    const usersOfferingWhatINeed = [];
+    const mutualMatches = [];
+
+    for (const user of allUsers) {
+      let wantsMySkill = false;
+      let offersWhatINeed = false;
+
+      // Check if this user wants my offered skills
+      for (const mySkill of currentUser.skillEmbeddings.filter(s => currentUser.skillsOffered.includes(s.skill))) {
+        for (const theirWanted of user.skillEmbeddings.filter(s => user.skillsWanted.includes(s.skill))) {
+          const sim = cosineSimilarity(mySkill.embedding, theirWanted.embedding);
+          console.log(`🧪 ${user.email} wants ${theirWanted.skill} — sim with my offered ${mySkill.skill}: ${sim.toFixed(3)}`);
+          if (sim >= SIM_THRESHOLD) {
+            wantsMySkill = true;
+            break;
+          }
+        }
+        if (wantsMySkill) break;
+      }
+
+      // Check if this user offers what I want
+      for (const theirSkill of user.skillEmbeddings.filter(s => user.skillsOffered.includes(s.skill))) {
+        for (const myWanted of currentUser.skillEmbeddings.filter(s => currentUser.skillsWanted.includes(s.skill))) {
+          const sim = cosineSimilarity(theirSkill.embedding, myWanted.embedding);
+          console.log(`🧪 ${user.email} offers ${theirSkill.skill} — sim with my wanted ${myWanted.skill}: ${sim.toFixed(3)}`);
+          if (sim >= SIM_THRESHOLD) {
+            offersWhatINeed = true;
+            break;
+          }
+        }
+        if (offersWhatINeed) break;
+      }
+
+      // Save in separate lists
+      if (wantsMySkill) usersWantingMySkills.push(user);
+      if (offersWhatINeed) usersOfferingWhatINeed.push(user);
+      if (wantsMySkill && offersWhatINeed) mutualMatches.push(user);
+    }
+
+    console.log("Users wanting my skills:", usersWantingMySkills.map(u => u.email));
+    console.log("Users offering what I need:", usersOfferingWhatINeed.map(u => u.email));
+    console.log("Mutual matches:", mutualMatches.map(u => u.email));
+
+    res.json({
+      usersWantingMySkills,
+      usersOfferingWhatINeed,
+      mutualMatches
+    });
+  } catch (err) {
+    console.error("Match error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
+
+
 
 module.exports = router;

@@ -1,4 +1,6 @@
 export async function fetchMatchData(token) {
+  console.log("Sending match request with token:", token); // <-- Add this
+
   const res = await fetch("http://localhost:5000/api/auth/match", {
     method: "GET",
     headers: {
@@ -6,9 +8,15 @@ export async function fetchMatchData(token) {
       "Content-Type": "application/json",
     },
   });
-  if (!res.ok) throw new Error("Failed to fetch matches");
-  return res.json();
-};
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Raw response body:", text);
+    throw new Error("Failed to fetch matches");
+  }
+
+  return await res.json();
+}
 
 export const addSkill = async (skill, token) => {
   const res = await fetch("http://localhost:5000/api/auth/add-skill", {
