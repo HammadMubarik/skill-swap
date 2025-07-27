@@ -6,13 +6,23 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   skillsOffered: [{ type: String }],
   skillsWanted: [{ type: String }],
-  // Add the skillEmbeddings field that your code expects
   skillEmbeddings: [{
     skill: { type: String, required: true },
     embedding: { type: [Number], required: true }
   }],
-  // Keep the old embedding field for backward compatibility (optional)
-  embedding: { type: [Number], default: [] }
+  embedding: { type: [Number], default: [] }, 
+  //  location field for geospatial matching
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], 
+      index: '2dsphere'
+    }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
