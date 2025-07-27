@@ -11,19 +11,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 // Register route
 router.post('/register', async (req, res) => {
   try {
-    console.log("Received registration request");
-    console.log("Request body:", req.body);
+     console.log("Received registration request");
+     console.log("Request body:", req.body);
 
-    const { name, email, password, skillsOffered, skillsWanted } = req.body;
+    const { name, email, password, skillsOffered, skillsWanted, latitude, longitude } = req.body;
 
     if (!name || !email || !password) {
-      console.log("Missing fields");
       return res.status(400).json({ message: 'Please fill in all fields' });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("User already exists");
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -53,11 +51,14 @@ router.post('/register', async (req, res) => {
       password: hashedPassword,
       skillsOffered: offered,
       skillsWanted: wanted,
-      skillEmbeddings
+      skillEmbeddings,
+      location: latitude && longitude ? {
+        type: "Point",
+        coordinates: [parseFloat(longitude), parseFloat(latitude)]
+      } : undefined
     });
 
     await newUser.save();
-    console.log("User registered:", newUser.email);
 
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1d' });
 
@@ -81,11 +82,11 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
+  // Find user
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Check password
+     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
@@ -163,12 +164,29 @@ router.get('/match', authMiddleware, async (req, res) => {
     if (!currentUser || !currentUser.skillEmbeddings?.length) {
       return res.status(404).json({ message: "User or their embeddings not found" });
     }
-    console.log("User:", currentUser.email);
 
-    const allUsers = await User.find({
-      _id: { $ne: currentUser._id },
-      skillEmbeddings: { $exists: true, $ne: [] },
-    });
+    let nearbyUsers = [];
+
+    if (currentUser.location?.coordinates?.length === 2) {
+      nearbyUsers = await User.find({
+        _id: { $ne: currentUser._id },
+        skillEmbeddings: { $exists: true, $ne: [] },
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: currentUser.location.coordinates
+            },
+            $maxDistance: 50000
+          }
+        }
+      });
+    } else {
+      nearbyUsers = await User.find({
+        _id: { $ne: currentUser._id },
+        skillEmbeddings: { $exists: true, $ne: [] },
+      });
+    }
 
     const cosineSimilarity = (vecA, vecB) => {
       const dot = vecA.reduce((sum, v, i) => sum + v * vecB[i], 0);
@@ -182,15 +200,14 @@ router.get('/match', authMiddleware, async (req, res) => {
     const usersOfferingWhatINeed = [];
     const mutualMatches = [];
 
-    for (const user of allUsers) {
+    for (const user of nearbyUsers) {
       let wantsMySkill = false;
       let offersWhatINeed = false;
 
-      // Check if they want my offered skills
+            // Check if they want my offered skills
       for (const mySkill of currentUser.skillEmbeddings.filter(s => currentUser.skillsOffered.includes(s.skill))) {
         for (const theirWanted of user.skillEmbeddings.filter(s => user.skillsWanted.includes(s.skill))) {
           const sim = cosineSimilarity(mySkill.embedding, theirWanted.embedding);
-          console.log(`${user.email} wants ${theirWanted.skill} — sim with my offered ${mySkill.skill}: ${sim.toFixed(3)}`);
           if (sim >= SIM_THRESHOLD) {
             wantsMySkill = true;
             break;
@@ -199,11 +216,9 @@ router.get('/match', authMiddleware, async (req, res) => {
         if (wantsMySkill) break;
       }
 
-      // Check if they offer what I want
       for (const theirSkill of user.skillEmbeddings.filter(s => user.skillsOffered.includes(s.skill))) {
         for (const myWanted of currentUser.skillEmbeddings.filter(s => currentUser.skillsWanted.includes(s.skill))) {
           const sim = cosineSimilarity(theirSkill.embedding, myWanted.embedding);
-          console.log(`${user.email} offers ${theirSkill.skill} — sim with my wanted ${myWanted.skill}: ${sim.toFixed(3)}`);
           if (sim >= SIM_THRESHOLD) {
             offersWhatINeed = true;
             break;
@@ -224,11 +239,9 @@ router.get('/match', authMiddleware, async (req, res) => {
     });
 
   } catch (err) {
-    console.error(" Match error:", err);
+    console.error("Match error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
-
 
 module.exports = router;
