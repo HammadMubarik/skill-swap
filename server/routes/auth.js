@@ -163,9 +163,6 @@ router.get('/match', authMiddleware, async (req, res) => {
     if (!currentUser || !currentUser.skillEmbeddings?.length) {
       return res.status(404).json({ message: "User or their embeddings not found" });
     }
-    // Testing
-    console.log("/match route hit");
-    console.log(" ncoming auth header:", req.headers.authorization);
     console.log("User:", currentUser.email);
 
     const allUsers = await User.find({
@@ -180,8 +177,7 @@ router.get('/match', authMiddleware, async (req, res) => {
       return dot / (magA * magB);
     };
 
-    const SIM_THRESHOLD = 0.65;
-
+    const SIM_THRESHOLD = 0.4;
     const usersWantingMySkills = [];
     const usersOfferingWhatINeed = [];
     const mutualMatches = [];
@@ -190,11 +186,11 @@ router.get('/match', authMiddleware, async (req, res) => {
       let wantsMySkill = false;
       let offersWhatINeed = false;
 
-      // Check if this user wants my offered skills
+      // Check if they want my offered skills
       for (const mySkill of currentUser.skillEmbeddings.filter(s => currentUser.skillsOffered.includes(s.skill))) {
         for (const theirWanted of user.skillEmbeddings.filter(s => user.skillsWanted.includes(s.skill))) {
           const sim = cosineSimilarity(mySkill.embedding, theirWanted.embedding);
-          console.log(`🧪 ${user.email} wants ${theirWanted.skill} — sim with my offered ${mySkill.skill}: ${sim.toFixed(3)}`);
+          console.log(`${user.email} wants ${theirWanted.skill} — sim with my offered ${mySkill.skill}: ${sim.toFixed(3)}`);
           if (sim >= SIM_THRESHOLD) {
             wantsMySkill = true;
             break;
@@ -203,11 +199,11 @@ router.get('/match', authMiddleware, async (req, res) => {
         if (wantsMySkill) break;
       }
 
-      // Check if this user offers what I want
+      // Check if they offer what I want
       for (const theirSkill of user.skillEmbeddings.filter(s => user.skillsOffered.includes(s.skill))) {
         for (const myWanted of currentUser.skillEmbeddings.filter(s => currentUser.skillsWanted.includes(s.skill))) {
           const sim = cosineSimilarity(theirSkill.embedding, myWanted.embedding);
-          console.log(`🧪 ${user.email} offers ${theirSkill.skill} — sim with my wanted ${myWanted.skill}: ${sim.toFixed(3)}`);
+          console.log(`${user.email} offers ${theirSkill.skill} — sim with my wanted ${myWanted.skill}: ${sim.toFixed(3)}`);
           if (sim >= SIM_THRESHOLD) {
             offersWhatINeed = true;
             break;
@@ -216,23 +212,19 @@ router.get('/match', authMiddleware, async (req, res) => {
         if (offersWhatINeed) break;
       }
 
-      // Save in separate lists
       if (wantsMySkill) usersWantingMySkills.push(user);
       if (offersWhatINeed) usersOfferingWhatINeed.push(user);
       if (wantsMySkill && offersWhatINeed) mutualMatches.push(user);
     }
-
-    console.log("Users wanting my skills:", usersWantingMySkills.map(u => u.email));
-    console.log("Users offering what I need:", usersOfferingWhatINeed.map(u => u.email));
-    console.log("Mutual matches:", mutualMatches.map(u => u.email));
 
     res.json({
       usersWantingMySkills,
       usersOfferingWhatINeed,
       mutualMatches
     });
+
   } catch (err) {
-    console.error("Match error:", err);
+    console.error(" Match error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
