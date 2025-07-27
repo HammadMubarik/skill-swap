@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../api/auth';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [coords, setCoords] = useState(null); 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,6 +12,22 @@ const Register = () => {
     skillsOffered: '',
     skillsWanted: ''
   });
+
+  // Get location 
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        });
+      },
+      (err) => {
+        console.warn("Geolocation error or denied:", err.message);
+        setCoords(null); 
+      }
+    );
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,7 +37,13 @@ const Register = () => {
     e.preventDefault();
 
     try {
-      const res = await registerUser(formData);
+      const payload = {
+        ...formData,
+        latitude: coords?.latitude,
+        longitude: coords?.longitude
+      };
+
+      const res = await registerUser(payload);
       if (res.token) {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
