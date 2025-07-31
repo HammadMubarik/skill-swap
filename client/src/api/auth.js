@@ -57,6 +57,10 @@ export const registerUser = async (formData) => {
       .split(",")
       .map((skill) => skill.trim())
       .filter((s) => s),
+    useDistanceMatching: formData.useDistanceMatching,
+    maxMatchDistance: formData.maxMatchDistance,
+    latitude: formData.latitude,
+    longitude: formData.longitude
   };
 
   const res = await fetch("http://localhost:5000/api/auth/register", {

@@ -14,7 +14,7 @@ router.post('/register', async (req, res) => {
     console.log("Received registration request");
     console.log("Request body:", req.body);
 
-    const { name, email, password, skillsOffered, skillsWanted, latitude, longitude } = req.body;
+    const { name, email, password, skillsOffered, skillsWanted, latitude, longitude, useDistanceMatching, maxMatchDistance } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please fill in all fields' });
@@ -44,28 +44,32 @@ router.post('/register', async (req, res) => {
       skillEmbeddings.push({ skill, embedding });
     }
 
-    let location = undefined;
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      location = {
-        type: "Point",
-        coordinates: [lng, lat]
-      };
-    }
-
-    const newUser = new User({
+  
+    const newUserData = {
       name,
       email,
       password: hashedPassword,
       skillsOffered: offered,
       skillsWanted: wanted,
       skillEmbeddings,
-      location
-    });
+      useDistanceMatching: useDistanceMatching || false,
+      maxMatchDistance: maxMatchDistance || 50,
+    };
 
+    // Only add location if we have valid coordinates
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && 
+        lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      newUserData.location = {
+        type: "Point",
+        coordinates: [lng, lat]
+      };
+    }
+
+    const newUser = new User(newUserData);
     await newUser.save();
+    console.log("User saved successfully:", newUser._id);
 
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1d' });
 
@@ -89,11 +93,11 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-  // Find user
+    // Find user
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-     // Check password
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
@@ -169,7 +173,7 @@ router.get('/match', authMiddleware, async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id);
     if (!currentUser || !currentUser.skillEmbeddings?.length) {
-      return res.status(404).json({ message: "User or their embeddings not found" });
+       return res.status(404).json({ message: "User or their embeddings not found" });
     }
 
     let candidateUsers = [];
@@ -245,42 +249,44 @@ router.get('/match', authMiddleware, async (req, res) => {
     const usersOfferingWhatINeed = [];
     const mutualMatches = [];
 
-    // Process candidate users
-    for (const user of candidateUsers) {
-      let wantsMySkill = false;
-      let offersWhatINeed = false;
+    // Process candidate users only if current user has embeddings
+    if (currentUser.skillEmbeddings?.length > 0) {
+      for (const user of candidateUsers) {
+        let wantsMySkill = false;
+        let offersWhatINeed = false;
 
-      // Check if they want my offered skills
-      for (const mySkill of currentUser.skillEmbeddings.filter(s => 
-        currentUser.skillsOffered.includes(s.skill))) {
-        for (const theirWanted of user.skillEmbeddings.filter(s => 
-          user.skillsWanted.includes(s.skill))) {
-          const sim = cosineSimilarity(mySkill.embedding, theirWanted.embedding);
-          if (sim >= SIM_THRESHOLD) {
-            wantsMySkill = true;
-            break;
+        // Check if they want my offered skills
+        for (const mySkill of currentUser.skillEmbeddings.filter(s => 
+          currentUser.skillsOffered.includes(s.skill))) {
+          for (const theirWanted of user.skillEmbeddings.filter(s => 
+            user.skillsWanted.includes(s.skill))) {
+            const sim = cosineSimilarity(mySkill.embedding, theirWanted.embedding);
+            if (sim >= SIM_THRESHOLD) {
+              wantsMySkill = true;
+              break;
+            }
           }
+          if (wantsMySkill) break;
         }
-        if (wantsMySkill) break;
-      }
 
-      // Check if they offer what I need
-      for (const theirSkill of user.skillEmbeddings.filter(s => 
-        user.skillsOffered.includes(s.skill))) {
-        for (const myWanted of currentUser.skillEmbeddings.filter(s => 
-          currentUser.skillsWanted.includes(s.skill))) {
-          const sim = cosineSimilarity(theirSkill.embedding, myWanted.embedding);
-          if (sim >= SIM_THRESHOLD) {
-            offersWhatINeed = true;
-            break;
+        // Check if they offer what I need
+        for (const theirSkill of user.skillEmbeddings.filter(s => 
+          user.skillsOffered.includes(s.skill))) {
+          for (const myWanted of currentUser.skillEmbeddings.filter(s => 
+            currentUser.skillsWanted.includes(s.skill))) {
+            const sim = cosineSimilarity(theirSkill.embedding, myWanted.embedding);
+            if (sim >= SIM_THRESHOLD) {
+              offersWhatINeed = true;
+              break;
+            }
           }
+          if (offersWhatINeed) break;
         }
-        if (offersWhatINeed) break;
-      }
 
-      if (wantsMySkill) usersWantingMySkills.push(user);
-      if (offersWhatINeed) usersOfferingWhatINeed.push(user);
-      if (wantsMySkill && offersWhatINeed) mutualMatches.push(user);
+        if (wantsMySkill) usersWantingMySkills.push(user);
+        if (offersWhatINeed) usersOfferingWhatINeed.push(user);
+        if (wantsMySkill && offersWhatINeed) mutualMatches.push(user);
+      }
     }
 
     res.json({
@@ -369,7 +375,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         useDistanceMatching: user.useDistanceMatching,
         maxMatchDistance: user.maxMatchDistance,
         hasLocation: !!(user.location?.coordinates?.length === 2),
-        location: user.location // Include if you want to show coordinates
+        location: user.location
       }
     });
   } catch (err) {

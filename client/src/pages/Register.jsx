@@ -10,7 +10,9 @@ const Register = () => {
     email: '',
     password: '',
     skillsOffered: '',
-    skillsWanted: ''
+    skillsWanted: '',
+    useDistanceMatching: false,
+    maxMatchDistance: 50
   });
 
   // Get location 
@@ -30,7 +32,11 @@ const Register = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
 const handleSubmit = async (e) => {
@@ -96,6 +102,40 @@ const handleSubmit = async (e) => {
           onChange={handleChange}
         />
         <br /><br />
+        
+        <div style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '20px' }}>
+          <h3>Matching Preferences</h3>
+          <label>
+            <input
+              type="checkbox"
+              name="useDistanceMatching"
+              checked={formData.useDistanceMatching}
+              onChange={handleChange}
+            />
+            Enable distance-based matching
+          </label>
+          <br /><br />
+          
+          {formData.useDistanceMatching && (
+            <div>
+              <label>
+                Max distance (km): 
+                <input
+                  type="number"
+                  name="maxMatchDistance"
+                  min="1"
+                  max="10000"
+                  value={formData.maxMatchDistance}
+                  onChange={handleChange}
+                  style={{ marginLeft: '10px', width: '80px' }}
+                />
+              </label>
+              <br />
+              <small>Location: {coords ? ' Detected' : ' Not available'}</small>
+            </div>
+          )}
+        </div>
+        
         <button type="submit">Register</button>
       </form>
     </div>

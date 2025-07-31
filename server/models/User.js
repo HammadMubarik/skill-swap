@@ -17,15 +17,13 @@ const userSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'],
-      default: 'Point',
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      default: undefined,
     }
   },
 
-// Distance-based matching preferences
+  // Distance-based matching preferences
   useDistanceMatching: { 
     type: Boolean, 
     default: false 
