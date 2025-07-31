@@ -33,27 +33,29 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const payload = {
-        ...formData,
-        latitude: coords?.latitude,
-        longitude: coords?.longitude
-      };
+  try {
+    const payload = {
+      ...formData,
+      skillsOffered: formData.skillsOffered || '',
+      skillsWanted: formData.skillsWanted || '',
+      latitude: coords?.latitude,
+      longitude: coords?.longitude
+    };
 
-      const res = await registerUser(payload);
-      if (res.token) {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user));
-        alert('Registered successfully');
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      alert('Error: ' + err.message);
+    const res = await registerUser(payload);
+    if (res.token) {
+      localStorage.setItem('token', res.token);
+      localStorage.setItem('user', JSON.stringify(res.user));
+      alert('Registered successfully');
+      navigate('/dashboard');
     }
-  };
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+};
 
   return (
     <div style={{ padding: '2rem' }}>

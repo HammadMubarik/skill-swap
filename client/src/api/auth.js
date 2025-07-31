@@ -88,3 +88,56 @@ export const loginUser = async (email, password) => {
   }
   return data;
 };
+
+export const updateDistancePreferences = async (useDistanceMatching, maxMatchDistance, token) => {
+  const res = await fetch("http://localhost:5000/api/auth/update-distance-preferences", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ useDistanceMatching, maxMatchDistance }),
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to update distance preferences");
+  }
+  
+  return res.json();
+};
+
+export const getUserProfile = async (token) => {
+  const res = await fetch("http://localhost:5000/api/auth/profile", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to fetch user profile");
+  }
+  
+  return res.json();
+};
+
+export const updateUserLocation = async (latitude, longitude, token) => {
+  const res = await fetch("http://localhost:5000/api/auth/update-location", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ latitude, longitude }),
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to update location");
+  }
+  
+  return res.json();
+};

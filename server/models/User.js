@@ -10,19 +10,35 @@ const userSchema = new mongoose.Schema({
     skill: { type: String, required: true },
     embedding: { type: [Number], required: true }
   }],
-  embedding: { type: [Number], default: [] }, 
-  //  location field for geospatial matching
+  embedding: { type: [Number], default: [] },
+
+  // Location field for geospatial matching
   location: {
     type: {
       type: String,
       enum: ['Point'],
-      default: 'Point'
+      default: 'Point',
     },
     coordinates: {
-      type: [Number], 
-      index: '2dsphere'
+      type: [Number], // [longitude, latitude]
+      default: undefined,
     }
+  },
+
+// Distance-based matching preferences
+  useDistanceMatching: { 
+    type: Boolean, 
+    default: false 
+  },
+  maxMatchDistance: { 
+    type: Number, 
+    default: 50, // in kilometers
+    min: 1,
+    max: 10000 // reasonable max of 10,000km
   }
 }, { timestamps: true });
+
+// Add 2dsphere index to enable geospatial querying
+userSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('User', userSchema);
