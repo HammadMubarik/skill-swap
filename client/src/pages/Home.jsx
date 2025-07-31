@@ -2,24 +2,16 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      height: "100vh",
-      backgroundColor: "#f7f7f7",
-      textAlign: "center"
-    }}>
+    <div className="home-container">
       <h1>Welcome to Skill Swap</h1>
       <p>Connect, trade, and grow your skills!</p>
 
-      <div style={{ marginTop: "20px" }}>
-        <Link to="/login">
-          <button style={{ margin: "10px", padding: "10px 20px" }}>Login</button>
+      <div className="home-buttons">
+        <Link to="/login" className="btn btn-primary">
+          Login
         </Link>
-        <Link to="/register">
-          <button style={{ margin: "10px", padding: "10px 20px" }}>Register</button>
+        <Link to="/register" className="btn btn-secondary">
+          Register
         </Link>
       </div>
     </div>
