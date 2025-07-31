@@ -69,6 +69,23 @@ const Dashboard = () => {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Dashboard</h2>
+        {/* Add this Profile button section */}
+    <div style={{ marginBottom: "20px" }}>
+      <button 
+        onClick={() => navigate("/profile")}
+        style={{ 
+          padding: "10px 20px", 
+          backgroundColor: "#007bff", 
+          color: "white", 
+          border: "none", 
+          borderRadius: "4px",
+          cursor: "pointer",
+          fontSize: "16px"
+        }}
+      >
+        My Profile
+      </button>
+    </div>
       {!user ? (
         <p>Loading...</p>
       ) : (

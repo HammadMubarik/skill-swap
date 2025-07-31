@@ -431,4 +431,53 @@ router.post('/update-location', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Add wanted skill route
+router.post('/add-wanted-skill', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { skill } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (skill && !user.skillsWanted.includes(skill)) {
+      user.skillsWanted.push(skill);
+      await user.save();
+    }
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        skillsOffered: user.skillsOffered,
+        skillsWanted: user.skillsWanted,
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Remove wanted skill route
+router.post("/remove-wanted-skill", authMiddleware, async (req, res) => {
+  const { skill } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.skillsWanted = user.skillsWanted.filter(
+      (s) => s.toLowerCase() !== skill.toLowerCase()
+    );
+
+    await user.save();
+    res.json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = router;
