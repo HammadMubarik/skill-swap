@@ -14,15 +14,6 @@ Modular Code Architecture (React + Express + MongoDB)
 Responsive Frontend (React Hooks & Context)
 Clean API Structure and Utility Layers
 
-Technologies Used
-
-Frontend
-React (with Hooks and Context)
-Vite (for fast builds and dev server)
-Axios
-Socket.IO Client
-Browser Geolocation API
-
 Backend
 Node.js + Express
 MongoDB + Mongoose
