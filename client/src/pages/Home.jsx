@@ -6,6 +6,7 @@ const Home = () => {
       <h1>Welcome to Skill Swap</h1>
       <p>Connect, trade, and grow your skills!</p>
 
+      {/* Navigation buttons */}
       <div className="home-buttons">
         <Link to="/login" className="btn btn-primary">
           Login

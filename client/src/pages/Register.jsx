@@ -14,6 +14,7 @@ const Register = () => {
     useDistanceMatching: false,
     maxMatchDistance: 50
   });
+  const [error, setError] = useState('');
 
   // Get location 
   useEffect(() => {
@@ -31,6 +32,7 @@ const Register = () => {
     );
   }, []);
 
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({ 
@@ -39,105 +41,129 @@ const Register = () => {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-  try {
-    const payload = {
-      ...formData,
-      skillsOffered: formData.skillsOffered || '',
-      skillsWanted: formData.skillsWanted || '',
-      latitude: coords?.latitude,
-      longitude: coords?.longitude
-    };
+    try {
+      const payload = {
+        ...formData,
+        skillsOffered: formData.skillsOffered || '',
+        skillsWanted: formData.skillsWanted || '',
+        latitude: coords?.latitude,
+        longitude: coords?.longitude
+      };
 
-    const res = await registerUser(payload);
-    if (res.token) {
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('user', JSON.stringify(res.user));
-      alert('Registered successfully');
-      navigate('/dashboard');
+      const res = await registerUser(payload);
+      if (res.token) {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message);
     }
-  } catch (err) {
-    alert('Error: ' + err.message);
-  }
-};
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Name"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
-        <input
-          name="email"
-          placeholder="Email"
-          type="email"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
-        <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
-        <input
-          name="skillsOffered"
-          placeholder="Skills you offer (comma-separated)"
-          onChange={handleChange}
-        />
-        <br /><br />
-        <input
-          name="skillsWanted"
-          placeholder="Skills you want (comma-separated)"
-          onChange={handleChange}
-        />
-        <br /><br />
-        
-        <div style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '20px' }}>
-          <h3>Matching Preferences</h3>
-          <label>
+    <div className="container">
+      <div className="page-container">
+        <h2>Register</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Name:</label>
             <input
-              type="checkbox"
-              name="useDistanceMatching"
-              checked={formData.useDistanceMatching}
+              name="name"
+              type="text"
+              value={formData.name}
               onChange={handleChange}
+              required
             />
-            Enable distance-based matching
-          </label>
-          <br /><br />
+          </div>
           
-          {formData.useDistanceMatching && (
-            <div>
+          <div className="form-group">
+            <label>Email:</label>
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Password:</label>
+            <input
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Skills you offer (comma-separated):</label>
+            <input
+              name="skillsOffered"
+              type="text"
+              value={formData.skillsOffered}
+              onChange={handleChange}
+              placeholder="e.g. JavaScript, Design, Marketing"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Skills you want (comma-separated):</label>
+            <input
+              name="skillsWanted"
+              type="text"
+              value={formData.skillsWanted}
+              onChange={handleChange}
+              placeholder="e.g. Python, Photography, Writing"
+            />
+          </div>
+          
+          {/* Distance matching preferences */}
+          <div className="card">
+            <h3>Matching Preferences</h3>
+            <div className="form-group">
               <label>
-                Max distance (km): 
                 <input
-                  type="number"
-                  name="maxMatchDistance"
-                  min="1"
-                  max="10000"
-                  value={formData.maxMatchDistance}
+                  type="checkbox"
+                  name="useDistanceMatching"
+                  checked={formData.useDistanceMatching}
                   onChange={handleChange}
-                  style={{ marginLeft: '10px', width: '80px' }}
                 />
+                Enable distance-based matching
               </label>
-              <br />
-              <small>Location: {coords ? ' Detected' : ' Not available'}</small>
             </div>
-          )}
-        </div>
-        
-        <button type="submit">Register</button>
-      </form>
+            
+            {formData.useDistanceMatching && (
+              <div className="form-group">
+                <label>
+                  Max distance (km): 
+                  <input
+                    type="number"
+                    name="maxMatchDistance"
+                    min="1"
+                    max="10000"
+                    value={formData.maxMatchDistance}
+                    onChange={handleChange}
+                  />
+                </label>
+                <small>Location: {coords ? '✅ Detected' : '❌ Not available'}</small>
+              </div>
+            )}
+          </div>
+          
+          <button type="submit" className="btn btn-primary">Register</button>
+          
+          {error && <div className="error-message">{error}</div>}
+        </form>
+      </div>
     </div>
   );
 };
