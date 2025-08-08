@@ -329,4 +329,51 @@ runner.test('JWT token - should reject invalid token', async () => {
     assert.strictEqual(error.message, 'Token not valid');
   }
 });
+
+// Test Group 7: Skill Matching Logic
+runner.test('Skill matching - should find mutual matches', async () => {
+  const currentUser = {
+    id: '1',
+    skillsOffered: ['JavaScript', 'React'],
+    skillsWanted: ['Python', 'Django']
+  };
+  
+  const candidates = [
+    {
+      id: '2',
+      skillsOffered: ['Python', 'Flask'],
+      skillsWanted: ['JavaScript']
+    }
+  ];
+  
+  const matches = findSkillMatches(currentUser, candidates);
+  
+  assert.strictEqual(matches.usersWantingMySkills.length, 1);
+  assert.strictEqual(matches.usersOfferingWhatINeed.length, 1);
+  assert.strictEqual(matches.mutualMatches.length, 1);
+});
+
+runner.test('Skill matching - should handle no matches', async () => {
+  const currentUser = {
+    id: '1',
+    skillsOffered: ['JavaScript'],
+    skillsWanted: ['Python']
+  };
+  
+  const candidates = [
+    {
+      id: '2',
+      skillsOffered: ['Java'],
+      skillsWanted: ['C++']
+    }
+  ];
+  
+  const matches = findSkillMatches(currentUser, candidates);
+  
+  assert.strictEqual(matches.usersWantingMySkills.length, 0);
+  assert.strictEqual(matches.usersOfferingWhatINeed.length, 0);
+  assert.strictEqual(matches.mutualMatches.length, 0);
+});
+
+
 runner.run().catch(console.error);
