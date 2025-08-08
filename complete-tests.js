@@ -275,4 +275,31 @@ runner.test('Distance preferences - invalid distance should fail', async () => {
     assert.strictEqual(error.message, 'Distance must be between 1 and 10,000 kilometers');
   }
 });
+
+// Test Group 5: Password Security
+runner.test('Password hashing - should create different hashes', async () => {
+  const password = 'password123';
+  const hash1 = await hashPassword(password);
+  const hash2 = await hashPassword(password);
+  
+  assert.notStrictEqual(hash1, hash2); 
+  assert(hash1.length > 20); 
+});
+
+runner.test('Password verification - should verify correct password', async () => {
+  const password = 'password123';
+  const hash = await hashPassword(password);
+  const isValid = await verifyPassword(password, hash);
+  
+  assert.strictEqual(isValid, true);
+});
+
+runner.test('Password verification - should reject incorrect password', async () => {
+  const password = 'password123';
+  const wrongPassword = 'wrongpassword';
+  const hash = await hashPassword(password);
+  const isValid = await verifyPassword(wrongPassword, hash);
+  
+  assert.strictEqual(isValid, false);
+});
 runner.run().catch(console.error);
