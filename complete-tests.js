@@ -104,4 +104,27 @@ async function verifyPassword(password, hashedPassword) {
   return await bcrypt.compare(password, hashedPassword);
 }
 
+// JWT token creation 
+function createToken(userId) {
+  const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
+  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '1d' });
+}
+
+// JWT token verification 
+function verifyToken(authHeader) {
+  const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('No token, authorization denied');
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    throw new Error('Token not valid');
+  }
+}
+
 runner.run().catch(console.error);
