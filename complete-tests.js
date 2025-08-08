@@ -127,4 +127,37 @@ function verifyToken(authHeader) {
   }
 }
 
+// Matching logic 
+function findSkillMatches(currentUser, candidateUsers) {
+  const matches = {
+    usersWantingMySkills: [],
+    usersOfferingWhatINeed: [],
+    mutualMatches: []
+  };
+  
+  for (const user of candidateUsers) {
+    if (user.id === currentUser.id) continue;
+    
+    // Check if they want my skills
+    const wantsMySkills = user.skillsWanted.some(wanted => 
+      currentUser.skillsOffered.some(offered => 
+        offered.toLowerCase() === wanted.toLowerCase()
+      )
+    );
+    
+    // Check if they offer what I need
+    const offersWhatINeed = user.skillsOffered.some(offered => 
+      currentUser.skillsWanted.some(wanted => 
+        wanted.toLowerCase() === offered.toLowerCase()
+      )
+    );
+    
+    if (wantsMySkills) matches.usersWantingMySkills.push(user);
+    if (offersWhatINeed) matches.usersOfferingWhatINeed.push(user);
+    if (wantsMySkills && offersWhatINeed) matches.mutualMatches.push(user);
+  }
+  
+  return matches;
+}
+
 runner.run().catch(console.error);
