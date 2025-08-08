@@ -43,5 +43,54 @@ class TestRunner {
     }
   }
 }
+// Validation logic 
+function validateRegistration(userData) {
+  const { name, email, password } = userData;
+  
+  if (!name || !email || !password) {
+    throw new Error('Please fill in all fields');
+  }
+  
+  if (email.indexOf('@') === -1) {
+    throw new Error('Invalid email format');
+  }
+  
+  if (password.length < 6) {
+    throw new Error('Password must be at least 6 characters');
+  }
+  
+  return true;
+}
+
+// Coordinate validation 
+function validateCoordinates(latitude, longitude) {
+  const lat = parseFloat(latitude);
+  const lng = parseFloat(longitude);
+  
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return false;
+  }
+  
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    return false;
+  }
+  
+  return { lat, lng };
+}
+
+// Distance preference validation 
+function validateDistancePreferences(useDistanceMatching, maxMatchDistance) {
+  if (maxMatchDistance !== undefined) {
+    const distance = Number(maxMatchDistance);
+    if (!Number.isFinite(distance) || distance < 1 || distance > 10000) {
+      throw new Error('Distance must be between 1 and 10,000 kilometers');
+    }
+  }
+  
+  return {
+    useDistanceMatching: Boolean(useDistanceMatching),
+    maxMatchDistance: Number(maxMatchDistance) || 50
+  };
+}
 
 runner.run().catch(console.error);
