@@ -160,4 +160,34 @@ function findSkillMatches(currentUser, candidateUsers) {
   return matches;
 }
 
+// UNIT TESTS
+
+const runner = new TestRunner();
+
+// Test Group 1: User Registration Validation
+runner.test('User registration - valid data should pass', async () => {
+  const validUser = {
+    name: 'John Doe',
+    email: 'john@example.com',
+    password: 'password123'
+  };
+  
+  const result = validateRegistration(validUser);
+  assert.strictEqual(result, true);
+});
+
+runner.test('User registration - missing name should fail', async () => {
+  const invalidUser = {
+    email: 'john@example.com',
+    password: 'password123'
+  };
+  
+  try {
+    validateRegistration(invalidUser);
+    throw new Error('Should have failed');
+  } catch (error) {
+    assert.strictEqual(error.message, 'Please fill in all fields');
+  }
+});
+
 runner.run().catch(console.error);
