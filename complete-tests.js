@@ -219,4 +219,29 @@ runner.test('User registration - short password should fail', async () => {
     assert.strictEqual(error.message, 'Password must be at least 6 characters');
   }
 });
+
+// Test Group 2: Skill Parsing
+runner.test('Skill parsing - comma separated skills should work', async () => {
+  const skillString = 'JavaScript, React, Node.js, Python';
+  const skills = parseSkills(skillString);
+  
+  assert.deepStrictEqual(skills, ['JavaScript', 'React', 'Node.js', 'Python']);
+});
+
+runner.test('Skill parsing - empty skills should return empty array', async () => {
+  const skills1 = parseSkills('');
+  const skills2 = parseSkills(null);
+  const skills3 = parseSkills(undefined);
+  
+  assert.deepStrictEqual(skills1, []);
+  assert.deepStrictEqual(skills2, []);
+  assert.deepStrictEqual(skills3, []);
+});
+
+runner.test('Skill parsing - should filter empty entries', async () => {
+  const skillString = 'JavaScript, , React, , Node.js, ';
+  const skills = parseSkills(skillString);
+  
+  assert.deepStrictEqual(skills, ['JavaScript', 'React', 'Node.js']);
+});
 runner.run().catch(console.error);
