@@ -244,4 +244,20 @@ runner.test('Skill parsing - should filter empty entries', async () => {
   
   assert.deepStrictEqual(skills, ['JavaScript', 'React', 'Node.js']);
 });
+
+// Test Group 3: Location Validation
+runner.test('Location validation - valid coordinates should pass', async () => {
+  const result = validateCoordinates(40.7128, -74.0060);
+  assert.deepStrictEqual(result, { lat: 40.7128, lng: -74.0060 });
+});
+
+runner.test('Location validation - invalid coordinates should fail', async () => {
+  const result1 = validateCoordinates(200, -74.0060); // Invalid lat
+  const result2 = validateCoordinates(40.7128, -300); // Invalid lng
+  const result3 = validateCoordinates('invalid', 'coords'); // Non-numeric
+  
+  assert.strictEqual(result1, false);
+  assert.strictEqual(result2, false);
+  assert.strictEqual(result3, false);
+});
 runner.run().catch(console.error);
