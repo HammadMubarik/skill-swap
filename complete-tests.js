@@ -302,4 +302,31 @@ runner.test('Password verification - should reject incorrect password', async ()
   
   assert.strictEqual(isValid, false);
 });
+
+// Test Group 6: JWT Tokens
+runner.test('JWT token - should create valid token', async () => {
+  const userId = 'user123';
+  const token = createToken(userId);
+  
+  assert(typeof token === 'string');
+  assert(token.length > 20);
+});
+
+runner.test('JWT token - should verify valid token', async () => {
+  const userId = 'user123';
+  const token = createToken(userId);
+  const authHeader = `Bearer ${token}`;
+  
+  const decoded = verifyToken(authHeader);
+  assert.strictEqual(decoded.id, userId);
+});
+
+runner.test('JWT token - should reject invalid token', async () => {
+  try {
+    verifyToken('Bearer invalidtoken');
+    throw new Error('Should have failed');
+  } catch (error) {
+    assert.strictEqual(error.message, 'Token not valid');
+  }
+});
 runner.run().catch(console.error);
