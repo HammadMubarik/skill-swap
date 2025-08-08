@@ -190,4 +190,33 @@ runner.test('User registration - missing name should fail', async () => {
   }
 });
 
+runner.test('User registration - invalid email should fail', async () => {
+  const invalidUser = {
+    name: 'John Doe',
+    email: 'invalid-email',
+    password: 'password123'
+  };
+  
+  try {
+    validateRegistration(invalidUser);
+    throw new Error('Should have failed');
+  } catch (error) {
+    assert.strictEqual(error.message, 'Invalid email format');
+  }
+});
+
+runner.test('User registration - short password should fail', async () => {
+  const invalidUser = {
+    name: 'John Doe',
+    email: 'john@example.com',
+    password: '123'
+  };
+  
+  try {
+    validateRegistration(invalidUser);
+    throw new Error('Should have failed');
+  } catch (error) {
+    assert.strictEqual(error.message, 'Password must be at least 6 characters');
+  }
+});
 runner.run().catch(console.error);
