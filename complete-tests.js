@@ -260,4 +260,19 @@ runner.test('Location validation - invalid coordinates should fail', async () =>
   assert.strictEqual(result2, false);
   assert.strictEqual(result3, false);
 });
+
+// Test Group 4: Distance Preferences
+runner.test('Distance preferences - valid settings should work', async () => {
+  const result = validateDistancePreferences(true, 100);
+  assert.deepStrictEqual(result, { useDistanceMatching: true, maxMatchDistance: 100 });
+});
+
+runner.test('Distance preferences - invalid distance should fail', async () => {
+  try {
+    validateDistancePreferences(true, 15000); // Too high
+    throw new Error('Should have failed');
+  } catch (error) {
+    assert.strictEqual(error.message, 'Distance must be between 1 and 10,000 kilometers');
+  }
+});
 runner.run().catch(console.error);
