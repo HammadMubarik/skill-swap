@@ -43,6 +43,17 @@ class TestRunner {
     }
   }
 }
+
+// Skill parsing logic 
+function parseSkills(skillString) {
+  if (!skillString) return [];
+  
+  return skillString
+    .split(',')
+    .map(skill => skill.trim())
+    .filter(skill => skill.length > 0);
+}
+
 // Validation logic 
 function validateRegistration(userData) {
   const { name, email, password } = userData;
